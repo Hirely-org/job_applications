@@ -1,4 +1,4 @@
-// services/jobApplicationDeletionService.js
+// jobApplicationDeletionService.js
 const db = require('./models');
 const rabbitMQ = require('./rabbitMQService');
 const MessageTypes = require('./constants/messageTypes');
@@ -12,9 +12,9 @@ class JobApplicationDeletionService {
         await rabbitMQ.connect();
         
         // Listen for user deletion success messages
-        await rabbitMQ.consumeQueue(rabbitMQ.queues.userDeletionResponse, async (msg) => {
-            const message = JSON.parse(msg.content.toString());
-            console.log('Received message:', message); // To help us debug
+        await rabbitMQ.consumeQueue(rabbitMQ.queues.userDeletionResponse, async (message) => {
+            // Message is already parsed in rabbitMQService, no need to parse again
+            console.log('Received message:', message);
 
             if (message.type === MessageTypes.DELETE_USER_SUCCESS) {
                 await this.handleUserDeletion(message);
@@ -45,23 +45,23 @@ class JobApplicationDeletionService {
             console.log(`Successfully deleted all applications for user ${userSub}`);
 
             // Send success message
-            await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, JSON.stringify({
+            await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, {
                 type: MessageTypes.JOB_APPLICATIONS_DELETED,
                 sagaId,
                 userSub,
                 count: applications.length
-            }));
+            });
 
         } catch (error) {
             console.error(`Error deleting job applications:`, error);
             
             // Send failure message
-            await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, JSON.stringify({
+            await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, {
                 type: MessageTypes.JOB_APPLICATIONS_DELETION_FAILED,
                 sagaId,
                 userSub,
                 error: error.message
-            }));
+            });
         }
     }
 }

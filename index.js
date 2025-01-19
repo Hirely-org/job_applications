@@ -7,6 +7,8 @@ const port = 5004;
 
 const jobApplicationRouter = require('./routers/jobApplicationRouter');
 
+app.options('*', cors()); // Allow preflight for all routes
+
 app.use(cors());
 app.use(express.json());
 app.use("/jobApplication", jobApplicationRouter);

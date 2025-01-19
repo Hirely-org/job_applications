@@ -37,6 +37,8 @@ class JobApplicationDeletionService {
             // Store for potential rollback
             this.deletedApplications.set(sagaId, applications.map(app => app.toJSON()));
 
+            throw new Error('Simulated failure in job application deletion');
+
             // Delete all applications
             await db.JobApplications.destroy({
                 where: { user_id: userSub }

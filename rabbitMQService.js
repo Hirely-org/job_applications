@@ -5,16 +5,25 @@ class RabbitMQService {
     constructor() {
         this.connection = null;
         this.channel = null;
-        this.queue = "q_a";
+        // Define our SAGA queues
+        this.queues = {
+            userDeletionResponse: 'user_deletion_response_queue',
+            jobApplicationDeletion: 'job_application_deletion_queue',
+            jobApplicationResponse: 'job_application_response_queue'
+        };
     }
 
     async connect() {
-        console.log(rabbitMQURI);
         if (!this.connection) {
             this.connection = await amqplib.connect(rabbitMQURI);
             this.channel = await this.connection.createChannel();
-            await this.channel.assertQueue(this.queue, { durable: false });
-            console.log(` [*] Connected to RabbitMQ, queue: ${this.queue}`);
+            
+            // Setup all required queues
+            for (const queueName of Object.values(this.queues)) {
+                await this.channel.assertQueue(queueName, { durable: true });
+            }
+            
+            console.log('[*] Connected to RabbitMQ and setup queues');
         }
         return this;
     }

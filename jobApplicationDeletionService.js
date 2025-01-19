@@ -11,9 +11,7 @@ class JobApplicationDeletionService {
     async initialize() {
         await rabbitMQ.connect();
         
-        // Listen for user deletion success messages
         await rabbitMQ.consumeQueue(rabbitMQ.queues.userDeletionResponse, async (message) => {
-            // Message is already parsed in rabbitMQService, no need to parse again
             console.log('Received message:', message);
 
             if (message.type === MessageTypes.DELETE_USER_SUCCESS) {
@@ -27,7 +25,6 @@ class JobApplicationDeletionService {
         console.log(`Starting to delete job applications for user ${userSub}`);
         
         try {
-            // Find all applications for this user
             const applications = await db.JobApplications.findAll({
                 where: { user_id: userSub }
             });
@@ -37,7 +34,10 @@ class JobApplicationDeletionService {
             // Store for potential rollback
             this.deletedApplications.set(sagaId, applications.map(app => app.toJSON()));
 
+            /* 
+            // To demonstrate SAGA rollback, uncomment this line:
             throw new Error('Simulated failure in job application deletion');
+            */
 
             // Delete all applications
             await db.JobApplications.destroy({
@@ -46,7 +46,6 @@ class JobApplicationDeletionService {
 
             console.log(`Successfully deleted all applications for user ${userSub}`);
 
-            // Send success message
             await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, {
                 type: MessageTypes.JOB_APPLICATIONS_DELETED,
                 sagaId,
@@ -57,7 +56,6 @@ class JobApplicationDeletionService {
         } catch (error) {
             console.error(`Error deleting job applications:`, error);
             
-            // Send failure message
             await rabbitMQ.sendToQueue(rabbitMQ.queues.jobApplicationResponse, {
                 type: MessageTypes.JOB_APPLICATIONS_DELETION_FAILED,
                 sagaId,

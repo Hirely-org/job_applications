@@ -23,7 +23,7 @@ app.use("/jobApplication", jobApplicationRouter);
 
 (async () => {
     try {
-        // Initialize deletion service
+        // Initialize deletion servicee
         await jobApplicationDeletionService.initialize();
 
         // Sync the database and start the Express server

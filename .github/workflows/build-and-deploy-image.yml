@@ -1,4 +1,4 @@
-name: Build and Deploy Users API
+name: Build and Deploy Job Application API
 
 on:
   push:
